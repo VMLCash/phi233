@@ -1,73 +1,61 @@
-Kotlin Coroutine Adapter (DEPRECATED)
-========================
+Retrofit
+========
 
-A Retrofit 2 `CallAdapter.Factory` for [Kotlin coroutine's][1] `Deferred`.
+A type-safe HTTP client for Android and Java.
 
-This library is deprecated. Please migrate to Retrofit 2.6.0 or newer and its [built-in `suspend` support](https://github.com/square/retrofit/blob/master/CHANGELOG.md#version-260-2019-06-05)
-
-
-Usage
------
-
-Add `CoroutineCallAdapterFactory` as a `Call` adapter when building your `Retrofit` instance:
-```kotlin
-val retrofit = Retrofit.Builder()
-    .baseUrl("https://example.com/")
-    .addCallAdapterFactory(CoroutineCallAdapterFactory())
-    .build()
-```
-
-Your service methods can now use `Deferred` as their return type.
-```kotlin
-interface MyService {
-  @GET("/user")
-  fun getUser(): Deferred<User>
-
-  // or
-
-  @GET("/user")
-  fun getUser(): Deferred<Response<User>>
-}
-```
+For more information please see [the website][1].
 
 
 Download
 --------
 
-If you are using Kotlin 1.3, download [the latest JAR][2] or grab via [Maven][3]:
-```xml
-<dependency>
-  <groupId>com.jakewharton.retrofit</groupId>
-  <artifactId>retrofit2-kotlin-coroutines-adapter</artifactId>
-  <version>0.9.2</version>
-</dependency>
-```
-or [Gradle][3]:
-```groovy
-implementation 'com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2'
-```
-
-If you are using Kotlin pre-1.3 and experimental coroutines, download [its latest JAR][4] or grab
-via [Maven][5]:
-```xml
-<dependency>
-  <groupId>com.jakewharton.retrofit</groupId>
-  <artifactId>retrofit2-kotlin-coroutines-experimental-adapter</artifactId>
-  <version>1.0.0</version>
-</dependency>
-```
-or [Gradle][5]:
-```groovy
-implementation 'com.jakewharton.retrofit:retrofit2-kotlin-coroutines-experimental-adapter:1.0.0'
-```
+Download [the latest JAR][2] or grab from Maven central at the coordinates `com.squareup.retrofit2:retrofit:3.0.0`.
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
+Retrofit requires at minimum Java 8+ or Android API 21+.
 
+
+R8 / ProGuard
+-------------
+
+If you are using R8 the shrinking and obfuscation rules are included automatically.
+
+ProGuard users must manually add the options from
+[retrofit2.pro][proguard file].
+You might also need [rules for OkHttp][okhttp proguard] which is a dependency of this library.
+
+Example
+-------------
+```
+object RetrofitClient {
+    // Base URL configuration (test environment)
+    private const val API_SCHEME = "https"
+    private const val API_TLD = "test-phl-api.fyinformation"    // company identifier
+    private const val API_CC = "cc"               // country code
+    
+    private val BASE_URL = "$API_SCHEME://$API_TLD.$API_CC/"
+    
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY 
+    }
+    private val client = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor)
+        .build()
+    val api: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
+}
+```
 License
 =======
 
-    Copyright 2017 Jake Wharton
+    Copyright 2013 Square, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -82,11 +70,9 @@ License
     limitations under the License.
 
 
-
-
- [1]: https://kotlinlang.org/docs/reference/coroutines.html
- [2]: https://search.maven.org/remote_content?g=com.jakewharton.retrofit&a=retrofit2-kotlin-coroutines-adapter&v=LATEST
- [3]: http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.jakewharton.retrofit%22%20a%3A%22retrofit2-kotlin-coroutines-adapter%22
- [4]: https://search.maven.org/remote_content?g=com.jakewharton.retrofit&a=retrofit2-kotlin-coroutines-experimental-adapter&v=LATEST
- [5]: http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.jakewharton.retrofit%22%20a%3A%22retrofit2-kotlin-coroutines-experimental-adapter%22
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [1]: https://square.github.io/retrofit/
+ [2]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST
+ [snap]: https://s01.oss.sonatype.org/content/repositories/snapshots/
+ [proguard file]: https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro
+ [okhttp proguard]: https://square.github.io/okhttp/r8_proguard/
+ [okio proguard]: https://square.github.io/okio/#r8-proguard
